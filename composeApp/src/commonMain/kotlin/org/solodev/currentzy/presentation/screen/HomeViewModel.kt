@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -57,6 +58,13 @@ class HomeViewModel(
             HomeUiEvent.SwitchCurrencies -> {
                 switchCurrencies()
             }
+
+            is HomeUiEvent.SaveSourceCurrencyCode -> {
+                saveSourceCurrencyCode(event.code)
+            }
+            is HomeUiEvent.SaveTargetCurrencyCode -> {
+                saveTargetCurrencyCode(event.code)
+            }
         }
     }
 
@@ -64,7 +72,7 @@ class HomeViewModel(
         screenModelScope.launch(Dispatchers.Main) {
             preferences.readSourceCurrencyCode().collectLatest { currencyCode ->
                 val selectedCurrency = _allCurrencies.find { it.code == currencyCode.name }
-                if(selectedCurrency != null){
+                if (selectedCurrency != null) {
                     _sourceCurrency.value = RequestState.Success(data = selectedCurrency)
                 } else {
                     _sourceCurrency.value = RequestState.Error(message = "Currency not found")
@@ -77,7 +85,7 @@ class HomeViewModel(
         screenModelScope.launch(Dispatchers.Main) {
             preferences.readTargetCurrencyCode().collectLatest { currencyCode ->
                 val selectedCurrency = _allCurrencies.find { it.code == currencyCode.name }
-                if(selectedCurrency != null){
+                if (selectedCurrency != null) {
                     _targetCurrency.value = RequestState.Success(data = selectedCurrency)
                 } else {
                     _targetCurrency.value = RequestState.Error(message = "Currency not found")
@@ -92,6 +100,7 @@ class HomeViewModel(
             if (localCache.isSuccess()) {
                 if (localCache.getSuccessData().isNotEmpty()) {
                     println("HomeViewModel: DATABASE IS FULL")
+                    _allCurrencies.clear()
                     _allCurrencies.addAll(localCache.getSuccessData())
                     if (!preferences.isDataFresh(Clock.System.now().toEpochMilliseconds())) {
                         println("HomeViewModel: DATA IS NOT FRESH")
@@ -99,7 +108,6 @@ class HomeViewModel(
                     } else {
                         println("HomeViewModel: DATA IS FRESH")
                     }
-
                 } else {
                     println("HomeViewModel: DATABASE NEEDS DATA")
                     cacheData()
@@ -107,14 +115,13 @@ class HomeViewModel(
             } else {
                 println("HomeViewModel: ERROR READING LOCAL DATABASE ${localCache.getErrorMessage()}")
             }
-
             getRateStatus()
         } catch (e: Exception) {
             println(e.message)
         }
     }
 
-    private suspend fun cacheData(){
+    private suspend fun cacheData() {
         val fetchedData = apiService.getLatestExchangeRates()
         if (fetchedData.isSuccess()) {
             mongoDb.cleanUp()
@@ -123,6 +130,7 @@ class HomeViewModel(
                 mongoDb.insertCurrencyData(it)
             }
             println("HomeViewModel: UPDATING _allCurrencies")
+            _allCurrencies.clear()
             _allCurrencies.addAll(fetchedData.getSuccessData())
         } else if (fetchedData.isError()) {
             println("HomeViewModel: FETCHING FAILED ${fetchedData.getErrorMessage()}")
@@ -136,10 +144,24 @@ class HomeViewModel(
         ) RateStatus.Fresh else RateStatus.Stale
     }
 
-    private fun switchCurrencies(){
+    private fun switchCurrencies() {
         val source = _sourceCurrency.value
         val target = _targetCurrency.value
         _sourceCurrency.value = target
         _targetCurrency.value = source
     }
+
+    private fun saveSourceCurrencyCode(code: String) {
+        screenModelScope.launch(Dispatchers.IO) {
+            preferences.saveSourceCurrencyCode(code)
+        }
+    }
+
+    private fun saveTargetCurrencyCode(code: String) {
+        screenModelScope.launch(Dispatchers.IO) {
+            preferences.saveTargetCurrencyCode(code)
+        }
+    }
+
+
 }

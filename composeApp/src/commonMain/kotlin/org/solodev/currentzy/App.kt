@@ -15,8 +15,6 @@ import org.solodev.currentzy.presentation.screen.HomeScreen
 @Preview
 fun App() {
     val colors = if(!isSystemInDarkTheme()) LightColors else DarkColors
-    initializeKoin()
-
     MaterialTheme(colorScheme = colors) {
         Navigator(HomeScreen())
     }
