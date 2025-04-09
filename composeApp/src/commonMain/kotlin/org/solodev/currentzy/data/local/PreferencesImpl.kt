@@ -11,7 +11,7 @@ import kotlinx.datetime.toLocalDateTime
 import org.solodev.currentzy.domain.PreferenceRepository
 
 @OptIn(ExperimentalSettingsApi::class)
-class PreferencesImpl(private val settings: Settings) : PreferenceRepository {
+class PreferencesImpl(settings: Settings) : PreferenceRepository {
     companion object {
         const val TIMESTAMP_KEY = "lastUpdated"
     }
