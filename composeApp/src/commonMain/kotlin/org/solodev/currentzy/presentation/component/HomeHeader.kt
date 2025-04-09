@@ -1,6 +1,8 @@
 package org.solodev.currentzy.presentation.component
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,10 +26,15 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +48,7 @@ import headerColor
 import org.jetbrains.compose.resources.painterResource
 import org.solodev.currentzy.domain.model.Currency
 import org.solodev.currentzy.domain.model.CurrencyCode
+import org.solodev.currentzy.domain.model.DisplayResult
 import org.solodev.currentzy.domain.model.RateStatus
 import org.solodev.currentzy.domain.model.RequestState
 import org.solodev.currentzy.util.displayCurrentDateTime
@@ -130,6 +138,11 @@ fun CurrencyInputs(
     target: RequestState<Currency>,
     onSwitchClick: () -> Unit,
 ) {
+    var animationStarted by remember { mutableStateOf(false) }
+    val animatedRotation by animateFloatAsState(
+        targetValue = if (animationStarted) 180F else 0F,
+        animationSpec = tween(durationMillis = 500)
+    )
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -141,8 +154,12 @@ fun CurrencyInputs(
         )
         Spacer(modifier = Modifier.height(14.dp))
         IconButton(
-            modifier = Modifier.padding(top = 24.dp),
-            onClick = onSwitchClick
+            modifier = Modifier.padding(top = 24.dp)
+                .graphicsLayer { rotationZ = animatedRotation },
+            onClick = {
+                animationStarted = !animationStarted
+                onSwitchClick()
+            }
         ) {
             Icon(
                 modifier = Modifier.size(24.dp),
@@ -185,21 +202,23 @@ fun RowScope.CurrencyView(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            if (currency.isSuccess()) {
-                Icon(
-                    modifier = Modifier.size(24.dp),
-                    painter = painterResource(CurrencyCode.valueOf(currency.getSuccessData().code).flag),
-                    tint = Color.Unspecified,
-                    contentDescription = "Flag Icon"
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = CurrencyCode.valueOf(currency.getSuccessData().code).name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    color = Color.White
-                )
-            }
+            currency.DisplayResult(
+                onSuccess = { data ->
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(CurrencyCode.valueOf(data.code).flag),
+                        tint = Color.Unspecified,
+                        contentDescription = "Flag Icon"
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = CurrencyCode.valueOf(data.code).name,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                        color = Color.White
+                    )
+                }
+            )
         }
     }
 }

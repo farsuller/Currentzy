@@ -15,6 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.solodev.currentzy.domain.PreferenceRepository
 import org.solodev.currentzy.domain.model.CurrencyCode
+import org.solodev.currentzy.domain.model.toCurrency
 
 class CurrentzyApiServiceImpl(
     private val preference: PreferenceRepository
@@ -65,6 +66,7 @@ class CurrentzyApiServiceImpl(
                     .filter { currency ->
                         availableCurrencyCodes.contains(currency.code)
                     }
+                    .map { it.toCurrency() }
 
                 //Persist a timestamp
                 val lastUpdated = apiResponse.meta.lastUpdatedAt
