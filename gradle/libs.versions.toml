@@ -21,7 +21,7 @@ multiplatformSettings = "1.2.0"
 voyager = "1.1.0-beta03"
 koinCore = "4.0.1"
 realm = "3.0.0"
-kotlinx-coroutines-core = "1.10.1"
+kotlinx-coroutines-core = "1.7.0"
 statelyCommon = "2.0.5"
 
 [libraries]
