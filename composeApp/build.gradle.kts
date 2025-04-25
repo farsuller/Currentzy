@@ -58,6 +58,7 @@ kotlin {
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
+            implementation("io.ktor:ktor-client-cio:3.0.1")
             implementation(libs.ktor.serialization.kotlinx.json)
 
             implementation(libs.kotlinx.datetime)
