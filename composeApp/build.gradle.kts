@@ -58,7 +58,7 @@ kotlin {
 
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
-            implementation("io.ktor:ktor-client-cio:3.0.1")
+            implementation(libs.ktor.client.cio)
             implementation(libs.ktor.serialization.kotlinx.json)
 
             implementation(libs.kotlinx.datetime)
@@ -95,6 +95,10 @@ android {
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+
+        applicationVariants.all {
+            base.archivesName.set("currentzy-${buildType.name}-${versionCode}-${versionName}")
+        }
     }
     packaging {
         resources {
